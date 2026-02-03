@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gmate Cloud API Test Client</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- Header -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h1 class="text-2xl font-bold text-gray-800 mb-2">Gmate Cloud API Test Client</h1>
+            <p class="text-gray-600">OAuth 2.0 Authorization Code Flow 테스트</p>
+        </div>
+
+        <!-- Auth Section -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">1. 인증</h2>
+
+            <div id="auth-status" class="mb-4 p-3 rounded-lg bg-gray-50">
+                <span class="text-gray-600">상태: </span>
+                <span id="status-text" class="font-medium">인증되지 않음</span>
+            </div>
+
+            <div id="login-section">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">API Base URL</label>
+                        <input type="text" id="api-base-url" value="http://localhost:8080"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Client ID</label>
+                        <input type="text" id="client-id" value="e054337a63634f57275a128b1c2fbcef"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Scopes</label>
+                    <div class="flex flex-wrap gap-2">
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" value="read:profile" checked class="scope-checkbox rounded">
+                            <span class="ml-2 text-sm">read:profile</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" value="read:glucose" checked class="scope-checkbox rounded">
+                            <span class="ml-2 text-sm">read:glucose</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" value="read:health_profile" class="scope-checkbox rounded">
+                            <span class="ml-2 text-sm">read:health_profile</span>
+                        </label>
+                    </div>
+                </div>
+
+                <button onclick="startOAuth()"
+                    class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition">
+                    OAuth 로그인 시작
+                </button>
+            </div>
+
+            <div id="logout-section" class="hidden">
+                <p class="text-green-600 mb-4">Access Token 획득 완료!</p>
+                <button onclick="logout()"
+                    class="bg-red-600 text-white px-6 py-2 rounded-md hover:bg-red-700 transition">
+                    로그아웃
+                </button>
+            </div>
+        </div>
+
+        <!-- Token Info -->
+        <div id="token-section" class="bg-white rounded-lg shadow-md p-6 mb-6 hidden">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">2. Token 정보</h2>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Access Token</label>
+                    <div class="mt-1 p-2 bg-gray-50 rounded-md break-all text-xs font-mono" id="access-token-display"></div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Token Type</label>
+                    <div class="mt-1 p-2 bg-gray-50 rounded-md text-sm" id="token-type-display"></div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Expires In</label>
+                    <div class="mt-1 p-2 bg-gray-50 rounded-md text-sm" id="expires-in-display"></div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Scopes</label>
+                    <div class="mt-1 p-2 bg-gray-50 rounded-md text-sm" id="scopes-display"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- API Test Section -->
+        <div id="api-section" class="bg-white rounded-lg shadow-md p-6 mb-6 hidden">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">3. API 테스트</h2>
+
+            <div class="space-y-3 mb-4">
+                <button onclick="callApi('/api/v1/users/me')"
+                    class="w-full text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-md transition">
+                    <span class="font-medium">GET /api/v1/users/me</span>
+                    <span class="text-gray-500 text-sm ml-2">- 기본 프로필 조회</span>
+                </button>
+                <button onclick="callApi('/api/v1/users/me/profile')"
+                    class="w-full text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-md transition">
+                    <span class="font-medium">GET /api/v1/users/me/profile</span>
+                    <span class="text-gray-500 text-sm ml-2">- 건강 정보 조회</span>
+                </button>
+                <button onclick="callApi('/api/v1/glucose?limit=10')"
+                    class="w-full text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-md transition">
+                    <span class="font-medium">GET /api/v1/glucose</span>
+                    <span class="text-gray-500 text-sm ml-2">- 혈당 데이터 조회</span>
+                </button>
+                <button onclick="callApi('/api/v1/glucose/statistics')"
+                    class="w-full text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-md transition">
+                    <span class="font-medium">GET /api/v1/glucose/statistics</span>
+                    <span class="text-gray-500 text-sm ml-2">- 혈당 통계</span>
+                </button>
+                <button onclick="callApi('/api/v1/consents')"
+                    class="w-full text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-md transition">
+                    <span class="font-medium">GET /api/v1/consents</span>
+                    <span class="text-gray-500 text-sm ml-2">- 동의 목록</span>
+                </button>
+            </div>
+
+            <!-- Custom API Call -->
+            <div class="border-t pt-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Custom API Call</label>
+                <div class="flex gap-2">
+                    <select id="custom-method" class="px-3 py-2 border border-gray-300 rounded-md">
+                        <option value="GET">GET</option>
+                        <option value="POST">POST</option>
+                        <option value="DELETE">DELETE</option>
+                    </select>
+                    <input type="text" id="custom-endpoint" placeholder="/api/v1/..."
+                        class="flex-1 px-3 py-2 border border-gray-300 rounded-md">
+                    <button onclick="callCustomApi()"
+                        class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
+                        호출
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Response Section -->
+        <div id="response-section" class="bg-white rounded-lg shadow-md p-6 hidden">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">4. 응답</h2>
+            <div class="mb-2">
+                <span class="text-sm text-gray-600">Endpoint: </span>
+                <span id="response-endpoint" class="font-mono text-sm"></span>
+            </div>
+            <div class="mb-2">
+                <span class="text-sm text-gray-600">Status: </span>
+                <span id="response-status" class="font-medium"></span>
+            </div>
+            <pre id="response-body" class="mt-2 p-4 bg-gray-900 text-green-400 rounded-md overflow-x-auto text-sm"></pre>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let tokenData = null;
+
+        // Check for stored token on load
+        window.onload = function() {
+            const stored = localStorage.getItem('gmate_token');
+            if (stored) {
+                tokenData = JSON.parse(stored);
+                updateUI(true);
+            }
+
+            // Check for OAuth callback
+            const params = new URLSearchParams(window.location.search);
+            if (params.has('token_data')) {
+                try {
+                    tokenData = JSON.parse(atob(params.get('token_data')));
+                    localStorage.setItem('gmate_token', JSON.stringify(tokenData));
+                    updateUI(true);
+                    // Clean URL
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                } catch (e) {
+                    console.error('Failed to parse token data:', e);
+                }
+            }
+
+            if (params.has('error')) {
+                alert('OAuth Error: ' + params.get('error') + '\n' + (params.get('error_description') || ''));
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        };
+
+        function updateUI(authenticated) {
+            document.getElementById('login-section').classList.toggle('hidden', authenticated);
+            document.getElementById('logout-section').classList.toggle('hidden', !authenticated);
+            document.getElementById('token-section').classList.toggle('hidden', !authenticated);
+            document.getElementById('api-section').classList.toggle('hidden', !authenticated);
+
+            const statusText = document.getElementById('status-text');
+            const authStatus = document.getElementById('auth-status');
+
+            if (authenticated) {
+                statusText.textContent = '인증됨';
+                authStatus.classList.remove('bg-gray-50');
+                authStatus.classList.add('bg-green-50');
+                statusText.classList.add('text-green-600');
+
+                // Display token info
+                document.getElementById('access-token-display').textContent = tokenData.access_token;
+                document.getElementById('token-type-display').textContent = tokenData.token_type;
+                document.getElementById('expires-in-display').textContent = tokenData.expires_in + '초';
+                document.getElementById('scopes-display').textContent = tokenData.scope;
+            } else {
+                statusText.textContent = '인증되지 않음';
+                authStatus.classList.add('bg-gray-50');
+                authStatus.classList.remove('bg-green-50');
+                statusText.classList.remove('text-green-600');
+            }
+        }
+
+        function startOAuth() {
+            const baseUrl = document.getElementById('api-base-url').value;
+            const clientId = document.getElementById('client-id').value;
+            const scopes = Array.from(document.querySelectorAll('.scope-checkbox:checked'))
+                .map(cb => cb.value).join(' ');
+
+            // Generate state for CSRF protection
+            const state = Math.random().toString(36).substring(2, 15);
+            localStorage.setItem('oauth_state', state);
+            localStorage.setItem('oauth_base_url', baseUrl);
+            localStorage.setItem('oauth_client_id', clientId);
+
+            const redirectUri = window.location.origin + '/oauth/callback';
+
+            const authUrl = `${baseUrl}/api/oauth/authorize?` + new URLSearchParams({
+                response_type: 'code',
+                client_id: clientId,
+                redirect_uri: redirectUri,
+                scope: scopes,
+                state: state
+            });
+
+            window.location.href = authUrl;
+        }
+
+        function logout() {
+            localStorage.removeItem('gmate_token');
+            tokenData = null;
+            updateUI(false);
+            document.getElementById('response-section').classList.add('hidden');
+        }
+
+        async function callApi(endpoint) {
+            const baseUrl = localStorage.getItem('oauth_base_url') || document.getElementById('api-base-url').value;
+            await makeApiCall('GET', baseUrl + endpoint);
+        }
+
+        async function callCustomApi() {
+            const method = document.getElementById('custom-method').value;
+            const endpoint = document.getElementById('custom-endpoint').value;
+            const baseUrl = localStorage.getItem('oauth_base_url') || document.getElementById('api-base-url').value;
+            await makeApiCall(method, baseUrl + endpoint);
+        }
+
+        async function makeApiCall(method, url) {
+            document.getElementById('response-section').classList.remove('hidden');
+            document.getElementById('response-endpoint').textContent = `${method} ${url}`;
+            document.getElementById('response-status').textContent = 'Loading...';
+            document.getElementById('response-body').textContent = '';
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Authorization': `Bearer ${tokenData.access_token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const statusEl = document.getElementById('response-status');
+                statusEl.textContent = `${response.status} ${response.statusText}`;
+                statusEl.className = response.ok ? 'font-medium text-green-600' : 'font-medium text-red-600';
+
+                const data = await response.json();
+                document.getElementById('response-body').textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('response-status').textContent = 'Error';
+                document.getElementById('response-status').className = 'font-medium text-red-600';
+                document.getElementById('response-body').textContent = error.message;
+            }
+        }
+    </script>
+</body>
+</html>
