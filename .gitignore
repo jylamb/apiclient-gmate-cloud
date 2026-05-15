@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Cloudflare / wrangler
+.wrangler/
+.dev.vars
+
+# Local demo project (별도 EC2 배포, 본 repo 외부 자산)
+demo/
+
+# Local env
+.env
+.env.local
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+
+# Build artifacts
+dist/
+build/

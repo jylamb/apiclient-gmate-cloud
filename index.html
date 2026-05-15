@@ -163,8 +163,26 @@
         // State
         let tokenData = null;
 
+        // 페이지 로드 시 서버측 env 에서 기본값 가져와 input 채우기.
+        // /api/config 는 Cloudflare Pages Functions (functions/api/config.js).
+        async function loadDefaultsFromEnv() {
+            try {
+                const res = await fetch('/api/config', { cache: 'no-store' });
+                if (!res.ok) return;
+                const cfg = await res.json();
+                const apiInput = document.getElementById('api-base-url');
+                const cidInput = document.getElementById('client-id');
+                if (apiInput && cfg.api_base_url) apiInput.value = cfg.api_base_url;
+                if (cidInput && cfg.client_id) cidInput.value = cfg.client_id;
+            } catch (e) {
+                console.warn('Failed to load /api/config defaults:', e);
+            }
+        }
+
         // Check for stored token on load
         window.onload = function() {
+            loadDefaultsFromEnv();
+
             const stored = localStorage.getItem('gmate_token');
             if (stored) {
                 tokenData = JSON.parse(stored);

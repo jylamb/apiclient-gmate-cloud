@@ -49,16 +49,24 @@ export async function onRequest(context) {
 
         const tokenData = await tokenResponse.json();
 
-        if (!tokenResponse.ok) {
-            const errorMsg = tokenData.error_description || tokenData.error || 'Token exchange failed';
+        // Gmate API 응답 구조: { success, data: {...}, error: {code, message}, meta: {...} }
+        // 표준 OAuth 2.0 RFC 6749 와 다르므로 명시적으로 unwrap.
+        if (!tokenResponse.ok || tokenData.success === false) {
+            const errorMsg =
+                tokenData?.error?.message ||
+                tokenData?.error?.code ||
+                tokenData?.error_description ||
+                (typeof tokenData?.error === 'string' ? tokenData.error : null) ||
+                'Token exchange failed';
             return Response.redirect(
                 `${url.origin}/?error=token_error&error_description=${encodeURIComponent(errorMsg)}`,
                 302
             );
         }
 
-        // Encode token data and redirect to main page
-        const encodedToken = btoa(JSON.stringify(tokenData));
+        // data 가 있으면 unwrap, 없으면 그대로 (RFC 표준 응답 fallback)
+        const tokens = tokenData.data || tokenData;
+        const encodedToken = btoa(JSON.stringify(tokens));
         return Response.redirect(
             `${url.origin}/?token_data=${encodeURIComponent(encodedToken)}`,
             302

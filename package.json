@@ -4,9 +4,10 @@
   "description": "Gmate Cloud API Test Client for Cloudflare Pages",
   "private": true,
   "scripts": {
-    "dev": "wrangler pages dev public --binding CLIENT_ID=test CLIENT_SECRET=test API_BASE_URL=http://localhost:8080",
-    "deploy": "wrangler pages deploy public",
-    "tail": "wrangler pages deployment tail"
+    "dev": "wrangler pages dev . --binding CLIENT_ID=test CLIENT_SECRET=test API_BASE_URL=http://localhost:8080",
+    "deploy": "wrangler pages deploy . --project-name apiclient-gmate-cloud",
+    "deploy:production": "wrangler pages deploy . --project-name apiclient-gmate-cloud --branch main",
+    "tail": "wrangler pages deployment tail --project-name apiclient-gmate-cloud"
   },
   "devDependencies": {
     "wrangler": "^3.0.0"
